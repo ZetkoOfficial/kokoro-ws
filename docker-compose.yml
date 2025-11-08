@@ -1,0 +1,5 @@
+services:
+  kokoro-demo:
+    build: 
+      context: .
+      dockerfile: dockerfiles/cpu-dockerfile

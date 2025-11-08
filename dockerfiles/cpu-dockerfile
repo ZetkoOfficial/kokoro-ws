@@ -1,0 +1,22 @@
+FROM python:3.12-slim-bullseye
+RUN apt-get -y update && apt-get -y install festival espeak-ng wget
+
+WORKDIR /application/
+RUN mkdir -p /model/
+RUN mkdir -p /output/
+
+COPY ./model /model
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1  
+
+COPY startup.sh .
+RUN chmod +x startup.sh
+
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt
+
+COPY src/ .
+
+EXPOSE 8888
+CMD ["./startup.sh"]
