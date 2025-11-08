@@ -1,6 +1,7 @@
 import json, onnxruntime
 import numpy as np
 from phonemizer import phonemize
+import re
 
 class Tokenizer:
     def __init__(self, vocabulary):
@@ -12,7 +13,6 @@ class Tokenizer:
     def to_phonems(self, text):
         text = text.strip()
 
-        # TODO: for now we use the festival backend 
         result = filter(lambda p: p in self.vocabulary, phonemize(
             text,
             language="en-us",
@@ -32,7 +32,9 @@ class Kokoro:
 
         self.voice = np.load(voice_path)
 
-        self.onnx_session = onnxruntime.InferenceSession(model_path)
+        self.onnx_session = onnxruntime.InferenceSession(model_path, providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
+        print("ONNXRunner used provider:", self.onnx_session.get_providers())
+
         self.tokenizer = Tokenizer(self.config["vocab"])
 
     def _model_output(self, phonems, speed):
@@ -52,11 +54,40 @@ class Kokoro:
         output = self.onnx_session.run(None, inputs)[0]
         return output
 
-    def tts(self, text, speed=1.0):
-        #TODO batch phonems in sizes of max 500
-        phonems = self.tokenizer.to_phonems(text)
+    def _to_batch(self, phonems):
+        BATCH_SIZE = 300
 
-        #TODO trim audio
-        audio = self._model_output(phonems, speed)
-        
-        return audio
+        batches = []
+        cur_batch = ""
+
+        # preferably split at ending punctutation
+        # TODO: support for sentences without punctuuation
+        for part in re.split(r"([!.?])", phonems):
+
+            if len(part) > BATCH_SIZE:
+                print("Sentence too long. Consider adding ending punctuation.")
+                return []
+
+            if len(cur_batch) + len(part) <= BATCH_SIZE:
+                cur_batch += part
+                continue
+            
+            batches.append(cur_batch)
+            cur_batch = part
+
+        if len(cur_batch) > 0:
+            batches.append(cur_batch)
+
+        return batches
+
+    def tts(self, text, speed=1.0):
+        phonems = self.tokenizer.to_phonems(text)        
+        data = bytearray()
+
+        for phonems in self._to_batch(phonems):
+            
+            #TODO trim audio end
+            audio = self._model_output(phonems, speed)
+            data.extend(audio)
+
+        return data

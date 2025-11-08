@@ -3,3 +3,6 @@ services:
     build: 
       context: .
       dockerfile: dockerfiles/cpu-dockerfile
+
+    volumes:
+      - ./output:/output/
