@@ -1,4 +1,17 @@
 services:
+
+  download:
+    profiles: ["download"]
+    build:
+      context: .
+      dockerfile: dockerfiles/download-dockerfile
+
+    volumes:
+      - ./model:/model/
+
+    environment:
+      VOICE_NAME: af_bella
+
   cpu:
     profiles: ["cpu"]
     build: 
@@ -8,6 +21,9 @@ services:
     ports:
       - 8888:8888
 
+    volumes:
+      - ./model:/model/:ro
+
   gpu:
     profiles: ["gpu"]
     build: 
@@ -16,6 +32,9 @@ services:
 
     ports:
       - 8888:8888
+
+    volumes:
+      - ./model:/model/:ro
 
     deploy:
       resources:
