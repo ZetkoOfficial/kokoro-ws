@@ -7,17 +7,6 @@ model = Kokoro(
     voice_path="/model/voice.npy",
     config_path="/model/config.json"
 )
-
-def producer(text, speed, queue: asyncio.Queue):
-    print("hello world?", flush=True)
-    for chunk in model.tts_generator(text, speed):
-        print("chunk moved to queue")
-        queue.put_nowait(chunk)
-
-        time.sleep(0.001)
-
-    queue.put_nowait(None)
-
 async def handle_connection(ws):
     queue = asyncio.Queue()
 
