@@ -26,9 +26,12 @@ async def handle_connection(ws):
             async for chunk in model.tts_generator_async(text, speed, threshold_rms):
                 print(f"[ws] Chunk sent ({len(chunk)} bytes)")
                 await ws.send(chunk)
-
+            
+            # send empty message to denote end of transmission
+            await ws.send(b"")
         except Exception as e:
             print(f"[ws] Error handling message: {message}\n{e}")
+            await ws.send(b"")
 
     print("[ws] Client closed connection.")
 

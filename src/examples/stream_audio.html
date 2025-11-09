@@ -63,7 +63,14 @@
                 send_btn.disabled = false;
             };
 
-            ws.onmessage = function(event) { enqueue(event.data) };
+            ws.onmessage = function(event) { 
+                if(event.data.byteLength == 0) {
+                    console.log("[ws] message finished");
+                    return;
+                }
+                
+                enqueue(event.data)
+            };
             ws.onclose = function() { console.log("[ws] closed"); };
         }
 

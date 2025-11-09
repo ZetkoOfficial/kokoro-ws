@@ -60,7 +60,6 @@ class Kokoro:
         
         chunks = audio[:chunk_count * chunk_length].reshape(chunk_count, chunk_length)
         rms = np.sqrt(np.mean(np.square(chunks), axis=1))
-        print(rms)
 
         is_noisy = (rms >= threshold_rms)[::-1]
         if not np.any(is_noisy):
