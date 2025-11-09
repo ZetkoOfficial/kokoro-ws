@@ -1,7 +1,7 @@
 import json, onnxruntime
 import numpy as np
 from phonemizer import phonemize
-import re
+import re, asyncio
 
 class Tokenizer:
     def __init__(self, vocabulary):
@@ -79,15 +79,28 @@ class Kokoro:
             batches.append(cur_batch)
 
         return batches
-
-    def tts(self, text, speed=1.0):
-        phonems = self.tokenizer.to_phonems(text)        
-        data = bytearray()
+    
+    def tts_generator(self, text, speed=1.0):
+        phonems = self.tokenizer.to_phonems(text)
 
         for phonems in self._to_batch(phonems):
-            
-            #TODO trim audio end
             audio = self._model_output(phonems, speed)
-            data.extend(audio)
+            yield bytes(audio)
+        
+        yield None
+
+    async def tts_generator_async(self, text, speed=1.0):
+        generator = self.tts_generator(text, speed)
+        while True:
+            chunk = await asyncio.to_thread(next, generator)
+            if chunk is None: break
+            yield chunk
+
+    def tts(self, text, speed=1.0):   
+        data = bytearray()
+        for chunk in self.tts_generator(text, speed):
+            if chunk is None: break
+
+            data.extend(chunk)
 
         return data

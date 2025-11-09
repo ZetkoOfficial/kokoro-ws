@@ -18,7 +18,4 @@ COPY src/ .
 
 EXPOSE 8888
 
-COPY startup.sh .
-RUN chmod +x startup.sh
-
-CMD ["./startup.sh"]
+CMD [ "python3", "server.py" ]

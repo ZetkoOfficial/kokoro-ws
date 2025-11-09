@@ -1,4 +1,4 @@
-from onnx.kokoro import Kokoro
+from kokoro import Kokoro
 
 print("Starting example 1")
 model = Kokoro(

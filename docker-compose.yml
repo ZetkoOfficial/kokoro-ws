@@ -6,3 +6,5 @@ services:
 
     volumes:
       - ./output:/output/
+    ports:
+      - 8888:8888

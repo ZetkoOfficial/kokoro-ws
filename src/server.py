@@ -1,0 +1,55 @@
+from kokoro import Kokoro
+from websockets.asyncio.server import serve
+import json, asyncio, signal,time 
+
+model = Kokoro(
+    model_path="/model/kokoro.onnx",
+    voice_path="/model/voice.npy",
+    config_path="/model/config.json"
+)
+
+def producer(text, speed, queue: asyncio.Queue):
+    print("hello world?", flush=True)
+    for chunk in model.tts_generator(text, speed):
+        print("chunk moved to queue")
+        queue.put_nowait(chunk)
+
+        time.sleep(0.001)
+
+    queue.put_nowait(None)
+
+async def handle_connection(ws):
+    queue = asyncio.Queue()
+
+    print("[ws] Client connected")
+    async for message in ws:
+        try:
+            message = json.loads(message) 
+            
+            if "text" not in message:
+                await ws.send(b"")
+                continue
+
+            text = message["text"]
+            speed = message.get("speed", 1.0)
+            
+            async for chunk in model.tts_generator_async(text, speed):
+                print(f"[ws] Chunk sent ({len(chunk)} bytes)")
+                await ws.send(chunk)
+
+        except Exception as e:
+            print(f"[ws] Error handling message: {message}\n{e}")
+
+    print("[ws] Client closed connection.")
+
+async def server():   
+    async with serve(handle_connection, "0.0.0.0", "8888") as server:
+        print("[ws] Server started on 8888")
+
+        loop = asyncio.get_running_loop()
+        loop.add_signal_handler(signal.SIGTERM, server.close)
+        await server.wait_closed()
+        print("[ws] Server closed.")
+
+if __name__ == "__main__":
+    asyncio.run(server())
