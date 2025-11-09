@@ -1,10 +1,26 @@
 services:
-  kokoro-demo:
+  cpu:
+    profiles: ["cpu"]
     build: 
       context: .
       dockerfile: dockerfiles/cpu-dockerfile
 
-    volumes:
-      - ./output:/output/
     ports:
       - 8888:8888
+
+  gpu:
+    profiles: ["gpu"]
+    build: 
+      context: .
+      dockerfile: dockerfiles/gpu-dockerfile
+
+    ports:
+      - 8888:8888
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
