@@ -26,3 +26,30 @@ docker compose up cpu
 # To evaluate the model on the GPU
 docker compose up gpu
 ```
+
+## Usage
+The started docker container runs a websocket server on port 8888.
+Speech to text is started by sending a message of the form:
+```json
+{
+    "text": "The text, which you want to turn into speech.",
+    "speed": 1,
+    "threshold_rms": 0.01
+}
+```
+The parameters `speed, threshold_rms` are optional, and are by default set to `1` and `0.01` respectively.
+The `threshold_rms` controls the threshold root-mean-square of the audio chunks, which are trimmed from the end of the audio, so a higher value will trim audio more generously.
+
+After sending a valid message to the server it responds by sending back raw mono-channel PCM audio chunks using the `f32le` encoding and a sample rate of `24kHz`. After the transmission of all chunks has completed (or an error has occured), the server sends an empty message:
+```
+-> JSON request
+
+<- PCM audio chunk 1
+<- PCM audio chunk 2
+...
+<- PCM audio chunk n
+
+<- empty message
+```
+## Examples 
+Examples on how to communicate with the server and convert text into speech, can be found in the `src/examples` folder.

@@ -8,8 +8,6 @@ model = Kokoro(
     config_path="/model/config.json"
 )
 async def handle_connection(ws):
-    queue = asyncio.Queue()
-
     print("[ws] Client connected")
     async for message in ws:
         try:

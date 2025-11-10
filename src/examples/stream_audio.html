@@ -71,7 +71,18 @@
                 
                 enqueue(event.data)
             };
-            ws.onclose = function() { console.log("[ws] closed"); };
+            ws.onclose = function() { 
+                ws = null;
+                audio_context = null;
+                queue = [];
+                start_time = 0;
+                is_playing = false;
+
+                connect_btn.disabled = false;
+                send_btn.disabled = true;
+
+                console.log("[ws] closed");
+            };
         }
 
         function connect() {
